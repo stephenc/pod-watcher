@@ -45,10 +45,11 @@ Usage:
 pod-watcher [flags]
 
 Flags:
--h, --help               help for pod-watcher
--m, --marker string      Marker substring to filter pods (required)
--s, --stop-on-delete     Stop after the first matching pod is deleted
---kubeconfig string  Path to kubeconfig file (defaults to in-cluster or standard config)
+      --context string      The context name to load (defaults to the default context)
+  -h, --help                help for pod-watcher
+      --kubeconfig string   Path to kubeconfig file (defaults to in-cluster or default config)
+  -m, --marker string       Marker substring to filter pods (required)
+  -s, --stop-on-delete      Stop after first matching pod is deleted
 ```
 
 # Examples

@@ -25,6 +25,7 @@ var (
 	marker       string
 	stopOnDelete bool
 	kubeconfig   string
+	kubecontext  string
 )
 
 // rootCmd defines the CLI command using Cobra
@@ -51,6 +52,7 @@ func init() {
 	rootCmd.Flags().StringVarP(&marker, "marker", "m", "", "Marker substring to filter pods (required)")
 	rootCmd.Flags().BoolVarP(&stopOnDelete, "stop-on-delete", "s", false, "Stop after first matching pod is deleted")
 	rootCmd.Flags().StringVar(&kubeconfig, "kubeconfig", "", "Path to kubeconfig file (defaults to in-cluster or default config)")
+	rootCmd.Flags().StringVar(&kubecontext, "context", "", "The context name to load (defaults to the default context)")
 	// Mark required flags
 	_ = rootCmd.MarkFlagRequired("marker")
 }
@@ -159,7 +161,7 @@ func runWatcher(ctx context.Context) error {
 			}
 
 			// Output the pod's YAML as one document in the stream
-			fmt.Printf("---\n%s\n", yamlStr)
+			fmt.Printf("---\n## Event: %s\n\n%s\n", event.Type, yamlStr)
 
 			// If this was a deletion of the target pod (stop-on-delete mode), we can finish
 			if stopOnDelete && targetAcquired && event.Type == watch.Deleted && currentKey == targetPodKey {
@@ -189,7 +191,11 @@ func buildConfig(kubeconfigPath string) (*rest.Config, error) {
 	}
 	// No kubeconfig specified: try default external config, then in-cluster
 	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
-	config := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, nil)
+	overrides := &clientcmd.ConfigOverrides{}
+	if kubecontext != "" {
+		overrides.CurrentContext = kubecontext
+	}
+	config := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, overrides)
 	restConfig, err := config.ClientConfig()
 	if err != nil {
 		// If not found in default locations, try in-cluster config
