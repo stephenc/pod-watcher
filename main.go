@@ -188,10 +188,12 @@ func buildConfig(kubeconfigPath string) (*rest.Config, error) {
 		return clientcmd.BuildConfigFromFlags("", kubeconfigPath)
 	}
 	// No kubeconfig specified: try default external config, then in-cluster
-	config, err := clientcmd.BuildConfigFromFlags("", "")
+	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+	config := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, nil)
+	restConfig, err := config.ClientConfig()
 	if err != nil {
 		// If not found in default locations, try in-cluster config
 		return rest.InClusterConfig()
 	}
-	return config, nil
+	return restConfig, nil
 }
